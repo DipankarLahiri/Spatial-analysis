@@ -23,6 +23,7 @@ library(leaflet.extras)
 library(osmdata)
 library(geojsonsf)
 library(forcats)
+library(janitor)
 
 df <- read_csv ('/Users/dipankarlahiri/Desktop/College/Sem 2/Data Analysis and Collection/R/Projects/Training/Spatial analysis/Data/london_cultural_venues_all_sites.csv')
 
@@ -317,19 +318,22 @@ df %>%
 
 pop_df <- pop_df %>%
   filter(Geography1 == "London Borough")
-
-pop_df$Name <- trimws(tolower(as.character(pop_df$Name)))
-london_boroughs_sf$Name <- trimws(tolower(as.character(london_boroughs_sf$Name)))
-pop_df$HECTARES <- london_boroughs_sf$HECTARES[match(pop_df$Name, london_boroughs_sf$Name)]
-pop_df$Population_Density <- pop_df$`Estimated Population mid-2019` / pop_df$HECTARES
+pop_df <- pop_df %>% clean_names()
+pop_df$name <- trimws(tolower(as.character(pop_df$name)))
+london_boroughs_sf$BOROUGH <- trimws(tolower(as.character(london_boroughs_sf$BOROUGH)))
+pop_df$HECTARES <- london_boroughs_sf$HECTARES[match(pop_df$name, london_boroughs_sf$BOROUGH)]
+pop_df$Population_Density <- pop_df$estimated_population_mid_2019 / pop_df$HECTARES
+borough_counts <- borough_counts %>% mutate(BOROUGH = tolower(BOROUGH))
+pop_df <- pop_df %>% mutate(name = tolower(name))
 
 venue_per_capita <- borough_counts %>%
-  left_join(pop_df, by = c("BOROUGH" = "Name")) %>%
+  left_join(pop_df, by = c("BOROUGH" = "name")) %>%
   mutate(
-    venues_per_1000 = venue_count / (`Estimated Population mid-2019` / 1000)
+    venues_per_1000 = venue_count / (estimated_population_mid_2019 / 1000)
   ) %>%
-  select(BOROUGH, venue_count, `Estimated Population mid-2019`, Population_Density, venues_per_1000) %>%
+  select(BOROUGH, venue_count, estimated_population_mid_2019, Population_Density, venues_per_1000) %>%
   arrange(desc(venues_per_1000))
+
 
 print(venue_per_capita)
 
@@ -386,15 +390,19 @@ ggplot(venue_per_capita, aes(x = Population_Density, y = venues_per_1000)) +
 
 ```{r}
 
+df$BOROUGH <- tolower(trimws(df$BOROUGH))
+pop_df$name <- tolower(trimws(pop_df$name))
+venue_per_capita$BOROUGH <- tolower(trimws(venue_per_capita$BOROUGH))
+
 df <- df %>%
-  left_join(pop_df %>% select(Name, `International Migration Net`), by = c("BOROUGH" = "Name")) %>%
+  left_join(pop_df %>% select(name, international_migration_net), by = c("BOROUGH" = "name")) %>%
   left_join(venue_per_capita %>% select(BOROUGH, venue_count), by = "BOROUGH")
 
-cor(df$`International Migration Net.y`, df$venue_count.y, use = "complete.obs")
+cor(df$international_migration_net, df$venue_count, use = "complete.obs")
 
 df %>%
   group_by(`Cultural Venue Type`) %>%
-  summarise(avg_migration = mean(`International Migration Net.y`, na.rm = TRUE)) %>%
+  summarise(avg_migration = mean(international_migration_net, na.rm = TRUE)) %>%
   arrange(desc(avg_migration))
 
 ```
@@ -403,12 +411,12 @@ df %>%
 
 ```{r}
 
-model <- lm(venue_count.y ~ `International Migration Net.y`, data = df)
+model <- lm(venue_count ~ international_migration_net, data = df)
 
 df$residuals <- resid(model)
 df$z_residuals <- scale(df$residuals)
 
-ggplot(df, aes(x = `International Migration Net.y`, y = venue_count.y)) +
+ggplot(df, aes(x = international_migration_net, y = venue_count)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE, color = "red") +
   geom_text(aes(label = ifelse(abs(z_residuals) > 1.5, BOROUGH, "")), hjust = 0, vjust = 1) +
