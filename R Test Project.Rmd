@@ -158,7 +158,7 @@ tm_shape(borough_counts_sf) +
 
 ```
 
-# Westminster is the only borough with more than 1000 venues. Hillingdon, Richmond upon Thames and Waltham Forest are the only boroughs on the border with more than 200 venues.
+# Westminster is the only borough with more than 1000 venues. Hillingdon, Richmond upon Thames and Waltham Forest are the only boroughs on London's outer border with more than 200 venues.
 
 # VENUE TYPES ACROSS BOROUGHS
 
@@ -177,7 +177,7 @@ ggplot(df, aes(x = BOROUGH, fill = `Cultural Venue Type`)) +
 
 ```
 
-# This above graph shows some interesting trends too. For example, Brent (226), Ealing (228) and Richmond upon Thames (227) have around the same number of total venues, but it is the southern borough of Richmond upon Thames which has more pubs (128) than the other two in the north (109 and 105). Among more central London boroughs, Islington (243 of 577 = 42.1%) and Lambeth (196 of 512 = 38.3%) have high proportion of pubs, Tower Hamlets (154 of 514 = 29.9%) and Hackney (178 of 683 = 26.1%) have low proportion of pubs. The highest proportion of pubs to total venues is in City of London(215 of 340 = 63.2%).
+# This above graph shows some interesting trends. For example, Brent (226), Ealing (228) and Richmond upon Thames (227) have around the same number of total venues, but it is the southern borough of Richmond upon Thames which has more pubs (128) than the other two in the north (109 and 105). Among more central London boroughs, Islington (243 of 577 = 42.1%) and Lambeth (196 of 512 = 38.3%) have high proportion of pubs, Tower Hamlets (154 of 514 = 29.9%) and Hackney (178 of 683 = 26.1%) have low proportion of pubs. The highest proportion of pubs to total venues is in City of London(215 of 340 = 63.2%).
 
 # RANKING BOROUGHS ON PROPORTION OF NUMBER OF PUBS TO OTHER VENUES
 
