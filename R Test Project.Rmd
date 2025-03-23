@@ -5,8 +5,12 @@ date: "2025-03-21"
 output: html_document
 ---
 
+# This is an analysis of data on cultural venues in London released by the Greater London Authority. The raw dataset categorizes London's 10,003 cultural venues by 29 variables.
+
 ```{r setup, include=FALSE}
+
 knitr::opts_chunk$set(echo = TRUE)
+
 library(readr)
 library(tidyverse)
 library(dplyr)
@@ -18,34 +22,68 @@ library(leaflet)
 library(leaflet.extras)
 library(osmdata)
 library(geojsonsf)
+library(forcats)
 
 df <- read_csv ('/Users/dipankarlahiri/Desktop/College/Sem 2/Data Analysis and Collection/R/Projects/Training/Spatial analysis/Data/london_cultural_venues_all_sites.csv')
 
-df$runtime <- as.Date(df$runtime, format = "%m/%d/%Y")
+pop_df <- read_csv ('/Users/dipankarlahiri/Desktop/College/Sem 2/Data Analysis and Collection/R/Projects/Training/Spatial analysis/Data/ukmidyearestimates20192020ladcodes.csv')
+
+shapefile_path <- "/Users/dipankarlahiri/Desktop/College/Sem 2/Data Analysis and Collection/R/Projects/Training/Spatial analysis/Data/statistical-gis-boundaries-london/ESRI/London_Borough_Excluding_MHW.shp"
+
+```
+
+# DATA CLEANING, PREPARATION
+
+# Of the 29 variables, some had very high number of NAs. All three logical variables had all values as NA, suggesting a data loading issue. Dropped all three columns alternativenames, building_name, greenflagcommunityaward. 
+
+# Changed the class of the runtime column from character to date. This turned out to be needless as this has only one unique value, thus ruling out possibilities of time-series analysis. 
+
+# The dataset had duplicate columns for ward and borough codes from different sources. ward_2018_code and ward_code_2018, as well as ward_2018_name and ward_name_2018, followed a systematic NA pattern, indicating they represent the same data. Similarly, borough_code and gss_code overlapped. These were merged into single columns for clarity. 
+
+# Identified 15 columns that were narrow categorical variables to describe the venues, which have many missing values. These would be useful for venue-specific analysis, but would not help broader analysis. Dropped contact_name, additional_contact_name, address1, address2, address3, runtime, website, ward_2018_name_merged, ward_2018_code_merged, gss_code_merged, os_addressbase_uprn, rm_organisation_name, ward, ward_code.
+
+# Identified and dropped fid_london_ward as a numeric variable associated only with the 5 large media production studios (the rarest cultural venue type). Not useful to analyse overall data.
+
+```{r}
+
 df <- df %>% select(-c(alternativenames, building_name, greenflagcommunityaward, borough_name))
+df$runtime <- as.Date(df$runtime, format = "%m/%d/%Y")
 df$ward_2018_code_merged <- ifelse(!is.na(df$ward_2018_code), df$ward_2018_code, df$ward_code_2018)
 df$ward_2018_name_merged <- ifelse(!is.na(df$ward_2018_name), df$ward_2018_name, df$ward_name_2018)
 df$gss_code_merged <- ifelse(is.na(df$gss_code), df$borough_code, df$gss_code)
 df <- df[, !(names(df) %in% c("ward_2018_code", "ward_code_2018", "ward_2018_name", "ward_name_2018"))]
 df <- df[, !(names(df) %in% c("gss_code", "borough_code"))]
+df <- df %>% select(-contact_name, -additional_contact_name, -address1, -address2, -address3, -runtime, -website, -ward_2018_name_merged, -ward_2018_code_merged, -gss_code_merged, -os_addressbase_uprn, -rm_organisation_name, -ward, -ward_code, -fid_london_ward)
 
 ```
 
-# This is an analysis of data on cultural venues in London released by the Greater London Authority. The raw dataset categorizes London's 10,003 cultural venues by 29 variables.
+# The dataset now has 7 variables of two types. There are no missing values. 
 
-# Description of dataset: Of the 29 variables, some have very high number of NAs. All three logical variables have all values as NA, suggesting a data loading issue. Dropped all three columns alternativenames, building_name, greenflagcommunityaward. Changed the class of the runtime column from character to date. Another data cleaning issue seems to be because of column duplication: ward_2018_code (chr) has 186 NAs, ward_code_2018 (chr) has 9919 NAs, ward_2018_name (chr) has 186 NAs, ward_name_2018 (chr) has 9919 NAs. For rows where ward_2018_code is not NA, ward_code_2018 is always NA. For rows where ward_2018_code is NA, ward_code_2018 is non-NA in 84 cases (and NA in 102 cases). This systematic pattern suggests that these columns are alternative representations of the same underlying information, coming from different data sources, instead of being random missing values. The four columns for ward names and codes from 2018 were thus merged into two. A same process was done with borough_code and gss_code. The dataset now has 22 columns.
+# 1> site_name, BOROUGH, Cultural Venue Type --- Categorical variables to classify the venues.
+
+# 2> easting, northing, latitude, longitude --- Numeric variables to denote locations of venues.
+
+# LIST OF BOROUGHS
 
 ```{r}
+
 unique(df$BOROUGH)
+
+```
+
+# All 33 London boroughs are represented in the dataset.
+
+# LIST OF VENUE TYPES
+
+```{r}
+
 unique(df$`Cultural Venue Type`)
 
 ```
 
-# All 33 London boroughs are represented in the dataset - Tower Hamlets, Camden, Ealing, Hammersmith and Fulham, City of London, Newham, Merton, Wandsworth, Barnet, Brent, Enfield, Kensington and Chelsea, Islington, Sutton, Southwark, Haringey, Hackney, Lambeth, Greenwich, Hillingdon, Lewisham, Westminster, Harrow, Hounslow, Richmond upon Thames, Bexley, Waltham Forest, Redbridge, Croydon, Barking and Dagenham, Kingston upon Thames, Bromley, Havering.
+# The 10,003 venues have 33 categories.
 
-# The 10,003 venues have 33 categories - Archives, Artists workspaces, Arts centres, Cinemas, Commercial galleries, Community centres, Creative co-working desk space, Creative workspaces, Dance performance venues, Dance rehearsal studios, Fashion and design, Jewellery design, Large media production studios, Legal street art walls, LGBT+ night time venues, Libraries, Live in artists' workspace, Makerspaces, Making and manufacturing, Museums and public galleries, Music (office based businesses), Music recording studios, Music rehearsal studios, Music venues (all), Music venues (grassroots), Outdoor spaces for cultural use, Prop and costume making, Pubs, Set and exhibition building, Skate Parks, Textile design, Theatre rehearsal studio, Theatres.
-
-# VENUE TYPES
+# DISTRIBUTION OF VENUE TYPES
 
 ```{r}
 
@@ -77,7 +115,7 @@ ggplot(borough_counts, aes(x = reorder(BOROUGH, venue_count), y = venue_count)) 
 
 # Westminster (1186) has the most cultural venues among the 33 London boroughs. Following closely are Camden (892) and Hackney (683). The boroughs with the least cultural venues are Barking and Dagenham (85), Redbridge (101) and Sutton (103).
 
-# VENUE MAPPING
+# VENUE MAPPING ON LATITUDE, LONGITUDE
 
 ```{r}
 
@@ -86,12 +124,9 @@ ggplot(df, aes(x = longitude, y = latitude)) +
   coord_fixed() +
   labs(title = "Geospatial Distribution of Cultural Venues in London")
 
-ggplot(df, aes(x = longitude, y = latitude)) +
-  geom_point(alpha = 0.5, color = "red") +
-  facet_wrap(~ BOROUGH) +
-  labs(title = "Cultural Venues in London by Borough")
-
 ```
+
+# This shows venues are most concentrated in central London locations. The general trend is that the further the location is from the centre of the city, the less venues it has. However, there are some curiousities. There is a spot in the southwest of the city which has an unusually low density of venues - this turns out to be the large Richmond Park area.
 
 # INTERACTIVE MAP
 
@@ -104,11 +139,14 @@ leaflet(df) %>%
 
 ```
 
+# Zoom in on the map of London and click on individual venues to return the name of the venue represented by site_name. 
+
+# A few more trends are visible on zooming in and out of the map. For example, Uxbridge, Romford are among locations further away from central London which have unusually high density of venues. Often, there is a high density of venues on certain roads or tube lines outside central London, like the A221 near Bexleyheath or the Elizabeth line from Ilford to Romford.
+
 # VENUE DISTRIBUTION PER BOROUGH
 
 ```{r}
 
-shapefile_path <- "/Users/dipankarlahiri/Desktop/College/Sem 2/Data Analysis and Collection/R/Projects/Training/Spatial analysis/Data/statistical-gis-boundaries-london/ESRI/London_Borough_Excluding_MHW.shp"
 london_boroughs_sf <- st_read(shapefile_path)
 london_boroughs_sf <- london_boroughs_sf %>%
   rename(BOROUGH = NAME)
@@ -116,18 +154,180 @@ borough_counts_sf <- london_boroughs_sf %>%
   left_join(borough_counts, by = "BOROUGH")
 
 tm_shape(borough_counts_sf) +
-  tm_polygons("venue_count", palette = "Blues", title = "Cultural Venues per Borough")
-
+  tm_polygons("venue_count", palette = "brewer.blues", title = "Cultural Venues per Borough")
 
 ```
+
+# Westminster is the only borough with more than 1000 venues. Hillingdon, Richmond upon Thames and Waltham Forest are the only boroughs on the border with more than 200 venues.
+
 # VENUE TYPES ACROSS BOROUGHS
 
 ```{r}
 
+df <- df %>%
+  mutate(BOROUGH = fct_reorder(BOROUGH, (table(BOROUGH)[BOROUGH])))
+
 ggplot(df, aes(x = BOROUGH, fill = `Cultural Venue Type`)) +
   geom_bar() +
   coord_flip() +
-  labs(title = "Distribution of Venue Types Across Boroughs", x = "Borough", y = "Count")
+  labs(title = "Distribution of Venue Types Across Boroughs", x = "Borough", y = "Count") +
+  guides(fill = guide_legend(ncol = 2)) +
+  theme(legend.key.size = unit(0.3, "cm"),
+        legend.text = element_text(size = 8))
 
 ```
+
+# This above graph shows some interesting trends too. For example, Brent (226), Ealing (228) and Richmond upon Thames (227) have around the same number of total venues, but it is the southern borough of Richmond upon Thames which has more pubs (128) than the other two in the north (109 and 105). Among more central London boroughs, Islington (243 of 577 = 42.1%) and Lambeth (196 of 512 = 38.3%) have high proportion of pubs, Tower Hamlets (154 of 514 = 29.9%) and Hackney (178 of 683 = 26.1%) have low proportion of pubs. The highest proportion of pubs to total venues is in City of London(215 of 340 = 63.2%).
+
+# RANKING BOROUGHS ON PROPORTION OF NUMBER OF PUBS TO OTHER VENUES
+
+```{r}
+
+df %>%
+  group_by(BOROUGH) %>%
+  summarise(
+    total_pubs = sum(`Cultural Venue Type` == "Pubs", na.rm = TRUE),
+    total_venues = n(),
+    percentage_pubs = (total_pubs / total_venues) * 100
+  ) %>%
+  arrange(desc(percentage_pubs))
+
+```
+
+# This above table reveals that even though the central borough of City of London has the highest proportion of pubs to other venues, the five boroughs which follow it are all in south London. A total of 11 boroughs have pubs being 50% or more of the total venues, none of these boroughs except City of London and Wandsworth are in central London. The three central London boroughs of Hackney (26%), Tower Hamlets (30%) and Camden (30%) are in fact the three boroughs with lowest proportion of pubs.
+
+# LGBT+ NIGHT TIME VENUES
+
+```{r}
+
+df %>%
+  group_by(BOROUGH) %>%
+  summarise(
+    total_venues = n(),
+    total_lgbt_venues = sum(`Cultural Venue Type` == "LGBT+ night time venues", na.rm = TRUE),
+    percent_lgbt_venues = (total_lgbt_venues / total_venues) * 100
+  ) %>%
+  arrange(desc(percent_lgbt_venues))
+
+```
+
+# LEGAL STREET ART WALLS
+
+```{r}
+
+df %>%
+  group_by(BOROUGH) %>%
+  summarise(
+    total_venues = n(),
+    total_street_art = sum(`Cultural Venue Type` == "Legal street art walls", na.rm = TRUE),
+    percent_street_art = (total_street_art / total_venues) * 100
+  ) %>%
+  arrange(desc(percent_street_art))
+
+```
+
+# SKATE PARKS
+
+```{r}
+
+df %>%
+  group_by(BOROUGH) %>%
+  summarise(
+    total_venues = n(),
+    total_skate_parks = sum(`Cultural Venue Type` == "Skate Parks", na.rm = TRUE),
+    percent_skate_parks = (total_skate_parks / total_venues) * 100
+  ) %>%
+  arrange(desc(percent_skate_parks))
+
+```
+
+# Now for a few combinations of venue types.
+
+# ARCHIVES, LIBRARIES
+
+```{r}
+
+df %>%
+  group_by(BOROUGH) %>%
+  summarise(
+    total_venues = n(),
+    total_archives_libraries = sum(`Cultural Venue Type` %in% c("Archives", "Libraries"), na.rm = TRUE),
+    percent_archives_libraries = (total_archives_libraries / total_venues) * 100
+  ) %>%
+  arrange(desc(percent_archives_libraries))
+
+```
+
+# MUSEUMS, ART CENTRES, GALLERIES
+
+```{r}
+
+df %>%
+  group_by(BOROUGH) %>%
+  summarise(
+    total_venues = n(),
+    total_museums_galleries = sum(`Cultural Venue Type` %in% c("Museums and public galleries", "Arts centres", "Commercial galleries"), na.rm = TRUE),
+    percent_museums_galleries = (total_museums_galleries / total_venues) * 100
+  ) %>%
+  arrange(desc(percent_museums_galleries))
+
+```
+
+# CINEMA, THEATRE
+
+```{r}
+
+df %>%
+  group_by(BOROUGH) %>%
+  summarise(
+    total_venues = n(),
+    total_cinemas_theatres = sum(`Cultural Venue Type` %in% c("Cinemas", "Theatre rehearsal studio", "Theatres"), na.rm = TRUE),
+    percent_cinemas_theatres = (total_cinemas_theatres / total_venues) * 100
+  ) %>%
+  arrange(desc(percent_cinemas_theatres))
+
+```
+
+# MUSIC, DANCE
+
+```{r}
+
+df %>%
+  group_by(BOROUGH) %>%
+  summarise(
+    total_venues = n(),
+    total_music_dance = sum(`Cultural Venue Type` %in% c("Dance performance venues", "Dance rehearsal studios", 
+                                                          "Music (office based businesses)", "Music recording studios", 
+                                                          "Music rehearsal studios", "Music venues (all)", "Music venues (grassroots)"), na.rm = TRUE),
+    percent_music_dance = (total_music_dance / total_venues) * 100
+  ) %>%
+  arrange(desc(percent_music_dance))
+
+```
+
+# Quite a few interesting trends can be seen from the above tables. For example, Haringey has the most proportion of legal street art walls (though only 4 boroughs have legal street art walls at all!), Barking and Dagenham have the most proportion of skate parks, Kensington and Chelsea leads in museums and galleries, Hackney leads in music and dance venues.  
+
+# A few ways forward with this data could be to 1> Make interactive maps with individual venue types or groups of venue types. 2> Group boroughs into regions and follow hypotheses like 'Does South London have the most pubs?' or 'Do boroughs of outer London have more spaces for physical activity (like skating)?'
+
+# I will now move on to collate this dataset with a dataset on population and demographic statistics released by the ONS to explore the distribution of cultural venues by population of London's boroughs.
+
+# VENUES PER BOROUGH POPULATION
+
+```{r}
+
+pop_df <- pop_df %>%
+  filter(Geography1 == "London Borough")
+
+venue_per_capita <- borough_counts %>%
+  left_join(pop_df, by = c("BOROUGH" = "Name")) %>%
+  mutate(venues_per_1000 = venue_count / (`Estimated Population  mid-2019` / 1000)) %>%
+  select(BOROUGH, venue_count, `Estimated Population  mid-2019`, venues_per_1000) %>%
+  arrange(desc(venues_per_1000))
+
+print(venue_per_capita)
+
+
+```
+
+# This shows City of London (35 venues per 1000 people) actually has a far higher number of venues per capita than all other boroughs. The other central London boroughs of Westminster, Camden, Hackney and Islington are the other boroughs to have a venue per capita count of more than 2. The eastern boroughs of Barking and Dagenham and Redbridge are the two boroughs with the lowest venues per capita population (less than 0.4 venues per 1000 people).
 
