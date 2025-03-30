@@ -9,21 +9,22 @@ This is an analysis of data on cultural venues in London released by the Greater
 
 ## Highlights of Findings
 
-##### Types of Cultural Venues in London
+
+##### 1. Types of Cultural Venues in London
 
 Pubs (4098) are the most common venue type. Large media production studios (5) are the rarest. 
 
-##### Number of Venues across Boroughs
+##### 2. Number of Venues across Boroughs
 
 Westminster (1186) has the most cultural venues among the 33 London boroughs. The boroughs with the least cultural venues are Barking and Dagenham (85), Redbridge (101) and Sutton (103).
 
-##### Types of Venues across Boroughs 
+##### 3. Types of Venues across Boroughs 
 
 **Pubs:** The highest proportion of pubs to other venues is in City of London (215 of 340 = 63.2%). But central London has a low proportion of pubs overall - Hackney (26%), Tower Hamlets (30%) and Camden (30%) are the three boroughs with the lowest proportion of pubs. South London has the most pubs overall. The five boroughs which follow City of London in proportion of pubs - Kingston upon Thames (61%), Bexley (59%), Croydon (58%), Bromley (57%) and Richmond upon Thames (56%) - are all in south London. Four other boroughs have pubs being more than 50% of total venues - Havering (east London), Hillingdon (west London), Wandsworth (central London), Sutton (south London).
 
 **Other Venue Types:** Haringey has the most proportion of legal street art walls (though only 4 boroughs have legal street art walls at all!). Barking and Dagenham have the most proportion of skate parks, Kensington and Chelsea leads in museums and galleries. Hackney leads in music and dance venues.  
 
-##### Venue Density across London
+##### 4. Venue Density across London
 
 The general trend is that the further the location is from the centre of the city, the less venues it has. However, there are some exceptions. 
 
@@ -35,21 +36,27 @@ The general trend is that the further the location is from the centre of the cit
 
 - Often, there is a high density of venues on certain roads or tube lines outside central London, like the A221 near Bexleyheath or the Elizabeth line from Ilford to Romford.
 
-##### Population Density and Venue Count
+##### 5. Population Density and Venue Count
 
 There is a significant positive correlation (0.69) between population density and total venue count. Boroughs with higher population density tend to have more venues overall and boroughs on the outskirts generally have low population densities and less venues. 
 
 **Outliers**
 
-- Westminster and Camden have exceptionally high venue counts (z-scores > 2) relative to their population density. City of London also stands out (z-score > 1) despite having one of the lowest population densities. Newham and Kensington and Chelsea have fewer venues than expected based on population density.
+- Westminster and Camden have exceptionally high venue counts (z-scores > 2) relative to their population density. City of London also stands out (z-score > 1) despite having one of the lowest population densities. 
 
-##### International Migration and Venues
+- Newham and Kensington and Chelsea have fewer venues than expected based on population density.
 
-There is a strong positive correlation (0.75) between net international migration and number of venues - meaning boroughs which have more international migration have more venues. The number of commercial galleries and archives is most associated with international migration. Skate parks, set and exhibition building and co-working desk spaces are the venue types least associated with international migration.
+##### 6. International Migration and Venues
+
+There is a strong positive correlation (0.75) between net international migration and number of venues - meaning boroughs which have more international migration have more venues. 
+
+The number of commercial galleries and archives is most associated with international migration. Skate parks, set and exhibition building and co-working desk spaces are the venue types least associated with international migration.
 
 **Outliers**
 
-Hackney stands out as a positive outlier, with significantly more venues than expected based on migration levels. In contrast, Redbridge and Newham are negative outliers, having high net international migration but fewer venues than predicted.
+- Hackney stands out as a positive outlier, with significantly more venues than expected based on migration levels. 
+
+- Redbridge and Newham are negative outliers, having high net international migration but fewer venues than predicted.
 
 -------------------------------------------------------------------------------------------------------------
 
@@ -360,7 +367,9 @@ df %>%
 
 Quite a few interesting trends can be seen from the above tables. For example, Haringey has the most proportion of legal street art walls (though only 4 boroughs have legal street art walls at all!), Barking and Dagenham have the most proportion of skate parks, Kensington and Chelsea leads in museums and galleries, Hackney leads in music and dance venues.  
 
-A few ways forward with this data could be to 1. Make interactive maps with individual venue types or groups of venue types. 2. Group boroughs into regions and follow hypotheses like 'Does South London have the most pubs?' or 'Do boroughs of outer London have more spaces for physical activity (like skating)?'
+A few ways forward with this data could be to: 
+1. Make interactive maps with individual venue types or groups of venue types. 
+2. Group boroughs into regions and follow hypotheses like 'Does South London have the most pubs?' or 'Do boroughs of outer London have more spaces for physical activity (like skating)?'
 
 I will now move on to collate this dataset with a dataset on population and demographic statistics released by the ONS to explore the distribution of cultural venues by population of London's boroughs.
 
