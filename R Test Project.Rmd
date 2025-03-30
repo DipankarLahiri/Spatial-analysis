@@ -7,6 +7,52 @@ output: html_document
 
 This is an analysis of data on cultural venues in London released by the Greater London Authority. The raw dataset categorizes London's 10,003 cultural venues by 29 variables.
 
+## Highlights of Findings
+
+##### Types of Cultural Venues in London
+
+Pubs (4098) are the most common venue type. Large media production studios (5) are the rarest. 
+
+##### Number of Venues across Boroughs
+
+Westminster (1186) has the most cultural venues among the 33 London boroughs. The boroughs with the least cultural venues are Barking and Dagenham (85), Redbridge (101) and Sutton (103).
+
+##### Types of Venues across Boroughs 
+
+**Pubs:** The highest proportion of pubs to other venues is in City of London (215 of 340 = 63.2%). But central London has a low proportion of pubs overall - Hackney (26%), Tower Hamlets (30%) and Camden (30%) are the three boroughs with the lowest proportion of pubs. South London has the most pubs overall. The five boroughs which follow City of London in proportion of pubs - Kingston upon Thames (61%), Bexley (59%), Croydon (58%), Bromley (57%) and Richmond upon Thames (56%) - are all in south London. Four other boroughs have pubs being more than 50% of total venues - Havering (east London), Hillingdon (west London), Wandsworth (central London), Sutton (south London).
+
+**Other Venue Types:** Haringey has the most proportion of legal street art walls (though only 4 boroughs have legal street art walls at all!). Barking and Dagenham have the most proportion of skate parks, Kensington and Chelsea leads in museums and galleries. Hackney leads in music and dance venues.  
+
+##### Venue Density across London
+
+The general trend is that the further the location is from the centre of the city, the less venues it has. However, there are some exceptions. 
+
+**Outliers**
+
+- The greenland area around Richmond Park is a large area near the centre of the city with no cultural venues.
+
+- Uxbridge, Romford are among locations further away from central London which have unusually high density of venues. 
+
+- Often, there is a high density of venues on certain roads or tube lines outside central London, like the A221 near Bexleyheath or the Elizabeth line from Ilford to Romford.
+
+##### Population Density and Venue Count
+
+There is a significant positive correlation (0.69) between population density and total venue count. Boroughs with higher population density tend to have more venues overall and boroughs on the outskirts generally have low population densities and less venues. 
+
+**Outliers**
+
+- Westminster and Camden have exceptionally high venue counts (z-scores > 2) relative to their population density. City of London also stands out (z-score > 1) despite having one of the lowest population densities. Newham and Kensington and Chelsea have fewer venues than expected based on population density.
+
+##### International Migration and Venues
+
+There is a strong positive correlation (0.75) between net international migration and number of venues - meaning boroughs which have more international migration have more venues. The number of commercial galleries and archives is most associated with international migration. Skate parks, set and exhibition building and co-working desk spaces are the venue types least associated with international migration.
+
+**Outliers**
+
+Hackney stands out as a positive outlier, with significantly more venues than expected based on migration levels. In contrast, Redbridge and Newham are negative outliers, having high net international migration but fewer venues than predicted.
+
+-------------------------------------------------------------------------------------------------------------
+
 ```{r setup, include=FALSE}
 
 knitr::opts_chunk$set(echo = TRUE)
@@ -33,17 +79,17 @@ shapefile_path <- "/Users/dipankarlahiri/Desktop/College/Sem 2/Data Analysis and
 
 ```
 
-# DATA CLEANING, PREPARATION
+## Data Cleaning, Preparation
 
-Of the 29 variables, some had very high number of NAs. All three logical variables had all values as NA, suggesting a data loading issue. Dropped three columns alternativenames, building_name, greenflagcommunityaward. 
+- Of the 29 variables, some had very high number of NAs. All three logical variables had all values as NA, suggesting a data loading issue. Dropped three columns alternativenames, building_name, greenflagcommunityaward. 
 
-Changed the class of the runtime column from character to date. This turned out to be needless as this has only one unique value, thus ruling out possibilities of time-series analysis. 
+- Changed the class of the runtime column from character to date. This turned out to be needless as this has only one unique value, thus ruling out possibilities of time-series analysis. 
 
-The dataset had duplicate columns for ward and borough codes from different sources. ward_2018_code and ward_code_2018, as well as ward_2018_name and ward_name_2018, followed a systematic NA pattern, indicating they represent the same data. Similarly, borough_code and gss_code overlapped. These were merged into single columns. 
+- The dataset had duplicate columns for ward and borough codes from different sources. ward_2018_code and ward_code_2018, as well as ward_2018_name and ward_name_2018, followed a systematic NA pattern, indicating they represent the same data. Similarly, borough_code and gss_code overlapped. These were merged into single columns. 
 
-Identified 15 columns that were narrow categorical variables to describe the venues, which have many missing values. These would be useful for venue-specific analysis, but would not help broader analysis. Dropped contact_name, additional_contact_name, address1, address2, address3, runtime, website, ward_2018_name_merged, ward_2018_code_merged, gss_code_merged, os_addressbase_uprn, rm_organisation_name, ward, ward_code.
+- Identified 15 columns that were narrow categorical variables to describe the venues, which have many missing values. These would be useful for venue-specific analysis, but would not help broader analysis. Dropped contact_name, additional_contact_name, address1, address2, address3, runtime, website, ward_2018_name_merged, ward_2018_code_merged, gss_code_merged, os_addressbase_uprn, rm_organisation_name, ward, ward_code.
 
-Dropped fid_london_ward as it was a numeric variable associated only with the 5 large media production studios (the rarest cultural venue type). Not useful to analyse overall data.
+- Dropped fid_london_ward as it was a numeric variable associated only with the 5 large media production studios (the rarest cultural venue type). Not useful to analyse overall data.
 
 ```{r}
 
@@ -64,9 +110,9 @@ The dataset now has 7 variables of two types. There are no missing values.
 
 2. easting, northing, latitude, longitude --- Numeric variables to denote locations of venues.
 
-# SUMMARY STATISTICS
+## Summary Statistics
 
-## LIST OF BOROUGHS
+### List of Boroughs
 
 ```{r}
 
@@ -76,7 +122,7 @@ unique(df$BOROUGH)
 
 All 33 London boroughs are represented in the dataset.
 
-## LIST OF VENUE TYPES
+### List of Venue Types
 
 ```{r}
 
@@ -86,7 +132,7 @@ unique(df$`Cultural Venue Type`)
 
 The 10,003 venues have 33 categories.
 
-## DISTRIBUTION OF VENUE TYPES
+### Distribution of Venue Types
 
 ```{r}
 
@@ -102,7 +148,7 @@ treemap(category_counts,
 
 Pubs (4098) are the most common venue type. This is followed by Community centres (903), Music venues (797) and Archives (556). Of the 33 venue types, Large media production studios (5) is the rarest.
 
-## VENUES PER BOROUGH
+### Venues per Borough
 
 ```{r}
 
@@ -118,9 +164,9 @@ ggplot(borough_counts, aes(x = reorder(BOROUGH, venue_count), y = venue_count)) 
 
 Westminster (1186) has the most cultural venues among the 33 London boroughs. Following closely are Camden (892) and Hackney (683). The boroughs with the least cultural venues are Barking and Dagenham (85), Redbridge (101) and Sutton (103).
 
-# MAPPING
+## Mapping
 
-## VENUE MAPPING ON LATITUDE, LONGITUDE
+### Venue mapping on geographical co-ordinates
 
 ```{r}
 
@@ -133,7 +179,7 @@ ggplot(df, aes(x = longitude, y = latitude)) +
 
 This shows venues are most concentrated in central London locations. The general trend is that the further the location is from the centre of the city, the less venues it has. However, there are some curiousities. There is a spot in the southwest of the city which has an unusually low density of venues - this turns out to be the large Richmond Park greenland area.
 
-## INTERACTIVE MAP
+### Interactive Map
 
 ```{r}
 
@@ -144,11 +190,11 @@ leaflet(df) %>%
 
 ```
 
-Zoom in on the map of London and click on individual venues to show the name of the venue (corresponding to site_name). 
+**Zoom in on the map of London and click on individual venues to show the name of the venue (corresponding to site_name).** 
 
 A few more trends are visible on zooming in and out of the map. For example, Uxbridge, Romford are among locations further away from central London which have unusually high density of venues. Often, there is a high density of venues on certain roads or tube lines outside central London, like the A221 near Bexleyheath or the Elizabeth line from Ilford to Romford.
 
-## VENUE DISTRIBUTION PER BOROUGH
+### Venue Distribution per Borough
 
 ```{r}
 
@@ -165,7 +211,7 @@ tm_shape(borough_counts_sf) +
 
 Westminster is the only borough with more than 1000 venues. Hillingdon, Richmond upon Thames and Waltham Forest are the only boroughs on London's outer border with more than 200 venues.
 
-# VENUE TYPES ACROSS BOROUGHS
+## Venue Types across Boroughs
 
 ```{r}
 
@@ -184,9 +230,9 @@ ggplot(df, aes(x = BOROUGH, fill = `Cultural Venue Type`)) +
 
 This above graph shows some interesting trends. For example, Brent (226), Ealing (228) and Richmond upon Thames (227) have around the same number of total venues, but it is the southern borough of Richmond upon Thames which has more pubs (128) than the other two in the north (109 and 105). Among more central London boroughs, Islington (243 of 577 = 42.1%) and Lambeth (196 of 512 = 38.3%) have high proportion of pubs, Tower Hamlets (154 of 514 = 29.9%) and Hackney (178 of 683 = 26.1%) have low proportion of pubs. The highest proportion of pubs to total venues is in City of London(215 of 340 = 63.2%).
 
-# RANKING BOROUGHS ON PROPORTIONS
+### Ranking Boroughs on Proportions of Venue Types
 
-## PUBS
+#### Pubs
 
 ```{r}
 
@@ -201,9 +247,9 @@ df %>%
 
 ```
 
-This above table reveals that even though the central borough of City of London has the highest proportion of pubs to other venues, the five boroughs which follow it are all in south London. A total of 11 boroughs have pubs being 50% or more of the total venues, none of these boroughs except City of London and Wandsworth are in central London. The three central London boroughs of Hackney (26%), Tower Hamlets (30%) and Camden (30%) are in fact the three boroughs with lowest proportion of pubs.
+This above table reveals that even though the central borough of City of London has the highest proportion of pubs to other venues, the five boroughs which follow it are all in south London - Kingston upon Thames (61%), Bexley (59%), Croydon (58%), Bromley (57%) and Richmond upon Thames (56%). A total of 10 boroughs have pubs being more than 50% of the total venues, none of these boroughs except City of London and Wandsworth are in central London. The three central London boroughs of Hackney (26%), Tower Hamlets (30%) and Camden (30%) are in fact the three boroughs with lowest proportion of pubs.
 
-## LGBT+ NIGHT TIME VENUES
+#### LGBT+ Night Time Venues
 
 ```{r}
 
@@ -218,7 +264,7 @@ df %>%
 
 ```
 
-## LEGAL STREET ART WALLS
+#### Legal Street Art Walls
 
 ```{r}
 
@@ -233,7 +279,7 @@ df %>%
 
 ```
 
-## SKATE PARKS
+#### Skate Parks
 
 ```{r}
 
@@ -250,7 +296,7 @@ df %>%
 
 Here's borough-wise rankings for a few combinations of venue types.
 
-## ARCHIVES, LIBRARIES
+#### Archives, Libraries
 
 ```{r}
 
@@ -265,7 +311,7 @@ df %>%
 
 ```
 
-## MUSEUMS, ART CENTRES, GALLERIES
+#### Museums, Art Centres, Galleries
 
 ```{r}
 
@@ -280,7 +326,7 @@ df %>%
 
 ```
 
-## CINEMA, THEATRE
+#### Cinema, Theatre
 
 ```{r}
 
@@ -295,7 +341,7 @@ df %>%
 
 ```
 
-## MUSIC, DANCE
+#### Music, Dance
 
 ```{r}
 
@@ -318,7 +364,7 @@ A few ways forward with this data could be to 1. Make interactive maps with indi
 
 I will now move on to collate this dataset with a dataset on population and demographic statistics released by the ONS to explore the distribution of cultural venues by population of London's boroughs.
 
-# VENUES PER POPULATION
+## Venues per Population
 
 ```{r}
 
@@ -344,6 +390,8 @@ venue_per_capita <- borough_counts %>%
 print(venue_per_capita)
 
 ```
+
+### Correlation Tests, Linear Modelling
 
 This shows City of London (35 venues per 1000 people) has a far higher number of venues per capita than all other boroughs. The other central London boroughs of Westminster, Camden, Hackney and Islington are the other boroughs to have a venue per capita count of more than 2. The eastern boroughs of Barking and Dagenham and Redbridge are the two boroughs with the lowest venues per capita population (less than 0.4 venues per 1000 people). This leads to the question - does population density have a correlation with venues per capita?
 
@@ -390,8 +438,7 @@ ggplot(venue_per_capita, aes(x = Population_Density, y = venues_per_1000)) +
 
 City of London is a clear outlier, with a very high venues-per-1000 rate despite its low population density.
 
-
-# INTERNATIONAL MIGRATION AND VENUES
+## International Migration ane Venues
 
 ```{r}
 
